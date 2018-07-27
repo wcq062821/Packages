@@ -1,0 +1,33 @@
+
+[
+    {
+        "command": "navigate_to_definition",
+        "keys": ["ctrl+alt+]"]
+    },
+     {
+        "command": "jump_prev",
+        "keys": ["ctrl+t"]
+    },
+    {
+        "command": "rebuild_tags",
+        "keys": ["ctrl+shift+r"]
+    },
+    { 
+        "command": "paste_and_indent",
+        "keys": ["ctrl+shift+alt+v"]
+    },
+    {
+        "keys": ["ctrl+shift+n"],
+        "command": "file_header_new_file",
+        "args":{
+            "paths": []
+        }
+    },
+    {
+        "keys": ["ctrl+shift+a"],
+        "command": "file_header_add_header",
+        "args":{
+            "paths": []
+        }
+    },
+]

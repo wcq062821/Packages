@@ -1,0 +1,18 @@
+[
+    {
+        "keys": ["]", "]"],
+        "command": "find_next_function",
+    },
+    {
+        "keys": ["[", "["],
+        "command": "find_pre_function",
+    },
+    {
+        "keys": ["ctrl+]", "]"],
+        "command": "find_next_block",
+    },
+    {
+        "keys": ["ctrl+[", "["],
+        "command": "find_pre_block",
+    },
+]

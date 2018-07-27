@@ -1,0 +1,42 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"AdvancedNewFile",
+		"Alignment",
+		"BracketHighlighter",
+		"Chinese-English Bilingual Dictionary",
+		"ChineseLocalizations",
+		"Clickable URLs",
+		"ColorPicker",
+		"ConvertToUTF8",
+		"CTags",
+		"DocBlockr",
+		"DocBlockr_Python",
+		"EasyMotion",
+		"Emmet",
+		"FileDiffs",
+		"FileHeader",
+		"FindKeyConflicts",
+		"GBK Support",
+		"Git",
+		"Jimbly's Clipboard History",
+		"MarkdownEditing",
+		"Package Control",
+		"SideBarEnhancements",
+		"SublimeLinter",
+		"SublimeREPL",
+		"SublimeTmpl",
+		"SystemVerilog",
+		"Table Editor",
+		"VBScript",
+		"Verilog",
+		"VHDL",
+		"VHDL Mode",
+		"Vintageous",
+		"WakaTime"
+	]
+}

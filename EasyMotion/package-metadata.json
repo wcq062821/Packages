@@ -1,0 +1,1 @@
+{"dependencies": [], "url": "https://github.com/tednaleid/sublime-EasyMotion", "sublime_text": ">=3000", "version": "2014.04.26.18.30.48", "platforms": ["*"], "description": "Sublime Text 2 plugin to quickly jump to any character in the visible area of the active view."}

@@ -1,0 +1,58 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+COMMAND_MODE_WAS	.\easy_motion.py	/^COMMAND_MODE_WAS = False$/;"	v
+CURRENT_JUMP_GROUP	.\easy_motion.py	/^CURRENT_JUMP_GROUP = None$/;"	v
+DeactivateJumpTargets	.\easy_motion.py	/^class DeactivateJumpTargets(sublime_plugin.WindowCommand):$/;"	c
+EasyMotionCommand	.\easy_motion.py	/^class EasyMotionCommand(sublime_plugin.WindowCommand):$/;"	c
+JUMP_GROUP_GENERATOR	.\easy_motion.py	/^JUMP_GROUP_GENERATOR = None$/;"	v
+JUMP_TARGET_SCOPE	.\easy_motion.py	/^JUMP_TARGET_SCOPE = 'string'$/;"	v
+JumpGroupGenerator	.\easy_motion.py	/^class JumpGroupGenerator:$/;"	c
+JumpTo	.\easy_motion.py	/^class JumpTo(sublime_plugin.WindowCommand):$/;"	c
+JumpToWinningSelection	.\easy_motion.py	/^class JumpToWinningSelection(sublime_plugin.TextCommand):$/;"	c
+REGEX_ESCAPE_CHARS	.\easy_motion.py	/^REGEX_ESCAPE_CHARS = '\\\\+*()[]{}^$?|:].,'$/;"	v
+SELECT_TEXT	.\easy_motion.py	/^SELECT_TEXT = False$/;"	v
+SetTextEmCommand	.\easy_motion.py	/^class SetTextEmCommand(sublime_plugin.TextCommand):$/;"	c
+ShowJumpGroupCommand	.\easy_motion.py	/^class ShowJumpGroupCommand(sublime_plugin.WindowCommand):$/;"	c
+UndoLastJumpTargets	.\easy_motion.py	/^class UndoLastJumpTargets(sublime_plugin.WindowCommand):$/;"	c
+__init__	.\easy_motion.py	/^    def __init__(self, view, character, placeholder_chars, case_sensitive):$/;"	m	class:JumpGroupGenerator
+__len__	.\easy_motion.py	/^    def __len__(self):$/;"	m	class:JumpGroupGenerator	file:
+activate_current_jump_group	.\easy_motion.py	/^    def activate_current_jump_group(self):$/;"	m	class:ShowJumpGroupCommand
+activate_mode	.\easy_motion.py	/^    def activate_mode(self):$/;"	m	class:EasyMotionCommand
+active_view	.\easy_motion.py	/^    active_view = None$/;"	v	class:EasyMotionCommand
+active_view	.\easy_motion.py	/^    active_view = None$/;"	v	class:SetTextEmCommand
+create_jump_target_groups	.\easy_motion.py	/^    def create_jump_target_groups(self):$/;"	m	class:JumpGroupGenerator
+deactivate_current_jump_group	.\easy_motion.py	/^    def deactivate_current_jump_group(self):$/;"	m	class:JumpTo
+determine_re_flags	.\easy_motion.py	/^    def determine_re_flags(self, character):$/;"	m	class:JumpGroupGenerator
+edit	.\easy_motion.py	/^    edit = None$/;"	v	class:SetTextEmCommand
+find_all_jump_targets_in_visible_region	.\easy_motion.py	/^    def find_all_jump_targets_in_visible_region(self, character):$/;"	m	class:JumpGroupGenerator
+finish_easy_motion	.\easy_motion.py	/^    def finish_easy_motion(self):$/;"	m	class:JumpTo
+get_folded_regions	.\easy_motion.py	/^    def get_folded_regions(self, view):$/;"	m	class:JumpGroupGenerator
+has_next_jump_target	.\easy_motion.py	/^    def has_next_jump_target(self):$/;"	m	class:JumpGroupGenerator
+interleave_jump_targets_from_cursor	.\easy_motion.py	/^    def interleave_jump_targets_from_cursor(self):$/;"	m	class:JumpGroupGenerator
+jump_to_winning_selection	.\easy_motion.py	/^    def jump_to_winning_selection(self):$/;"	m	class:JumpTo
+next	.\easy_motion.py	/^    def next(self):$/;"	m	class:JumpGroupGenerator
+pprint	.\easy_motion.py	/^from pprint import pprint$/;"	i
+previous	.\easy_motion.py	/^    def previous(self):$/;"	m	class:JumpGroupGenerator
+re	.\easy_motion.py	/^import re$/;"	i
+region_list_contains_region	.\easy_motion.py	/^    def region_list_contains_region(self, region_list, region):$/;"	m	class:JumpGroupGenerator
+run	.\easy_motion.py	/^    def run(self):$/;"	m	class:DeactivateJumpTargets
+run	.\easy_motion.py	/^    def run(self):$/;"	m	class:UndoLastJumpTargets
+run	.\easy_motion.py	/^    def run(self, character=None):$/;"	m	class:JumpTo
+run	.\easy_motion.py	/^    def run(self, character=None, select_text=False):$/;"	m	class:EasyMotionCommand
+run	.\easy_motion.py	/^    def run(self, edit):$/;"	m	class:SetTextEmCommand
+run	.\easy_motion.py	/^    def run(self, edit, begin, end):$/;"	m	class:JumpToWinningSelection
+run	.\easy_motion.py	/^    def run(self, next=True):$/;"	m	class:ShowJumpGroupCommand
+show_jump_group	.\easy_motion.py	/^    def show_jump_group(self, next=True):$/;"	m	class:ShowJumpGroupCommand
+start_easy_motion	.\easy_motion.py	/^    def start_easy_motion(self):$/;"	m	class:EasyMotionCommand
+sublime	.\easy_motion.py	/^import sublime$/;"	i
+sublime_plugin	.\easy_motion.py	/^import sublime_plugin$/;"	i
+target_regexp	.\easy_motion.py	/^    def target_regexp(self, character):$/;"	m	class:JumpGroupGenerator
+visible_region_begin	.\easy_motion.py	/^    def visible_region_begin(self):$/;"	m	class:JumpGroupGenerator
+visible_text	.\easy_motion.py	/^    def visible_text(self):$/;"	m	class:JumpGroupGenerator
+winning_selection	.\easy_motion.py	/^    winning_selection = None$/;"	v	class:EasyMotionCommand
+winning_selection_from	.\easy_motion.py	/^    def winning_selection_from(self, selection):$/;"	m	class:JumpTo
+zip_longest	.\easy_motion.py	/^from itertools import zip_longest$/;"	i
