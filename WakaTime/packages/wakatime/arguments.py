@@ -20,7 +20,7 @@ import traceback
 from .__about__ import __version__
 from .compat import basestring
 from .configs import parseConfigFile
-from .constants import AUTH_ERROR
+from .constants import AUTH_ERROR, DEFAULT_SYNC_OFFLINE_ACTIVITY
 from .packages import argparse
 
 
@@ -89,8 +89,8 @@ def parse_arguments():
                         help='Category of this heartbeat activity. Can be ' +
                              '"coding", "building", "indexing", ' +
                              '"debugging", "running tests", ' +
-                             '"manual testing", "browsing", ' +
-                             '"code reviewing" or "designing". ' +
+                             '"writing tests", "manual testing", ' +
+                             '"code reviewing", "browsing", or "designing". ' +
                              'Defaults to "coding".')
     parser.add_argument('--proxy', dest='proxy', action=StoreWithoutQuotes,
                         help='Optional proxy configuration. Supports HTTPS '+
@@ -103,6 +103,10 @@ def parse_arguments():
                         help='Disables SSL certificate verification for HTTPS '+
                              'requests. By default, SSL certificates are ' +
                              'verified.')
+    parser.add_argument('--ssl-certs-file', dest='ssl_certs_file',
+                        action=StoreWithoutQuotes,
+                        help='Override the bundled Python Requests CA certs ' +
+                             'file. By default, uses certifi for ca certs.')
     parser.add_argument('--project', dest='project', action=StoreWithoutQuotes,
                         help='Optional project name.')
     parser.add_argument('--alternate-project', dest='alternate_project',
@@ -116,6 +120,12 @@ def parse_arguments():
                         action=StoreWithoutQuotes,
                         help='Optional language name. If valid, takes ' +
                              'priority over auto-detected language.')
+    parser.add_argument('--local-file', dest='local_file', metavar='FILE',
+                        action=FileAction,
+                        help='Absolute path to local file for the ' +
+                             'heartbeat. When --entity is a remote file, ' +
+                             'this local file will be used for stats and ' +
+                             'just the value of --entity sent with heartbeat.')
     parser.add_argument('--hostname', dest='hostname',
                         action=StoreWithoutQuotes,
                         help='Hostname of current machine.')
@@ -126,13 +136,27 @@ def parse_arguments():
     parser.add_argument('--disableoffline', dest='offline_deprecated',
                         action='store_true',
                         help=argparse.SUPPRESS)
-    parser.add_argument('--hide-filenames', dest='hide_filenames',
+    parser.add_argument('--hide-file-names', dest='hide_file_names',
                         action='store_true',
                         help='Obfuscate filenames. Will not send file names ' +
                              'to api.')
+    parser.add_argument('--hide-filenames', dest='hide_filenames',
+                        action='store_true',
+                        help=argparse.SUPPRESS)
     parser.add_argument('--hidefilenames', dest='hidefilenames',
                         action='store_true',
                         help=argparse.SUPPRESS)
+    parser.add_argument('--hide-project-names', dest='hide_project_names',
+                        action='store_true',
+                        help='Obfuscate project names. When a project ' +
+                             'folder is detected instead of using the ' +
+                             'folder name as the project, a ' +
+                             '.wakatime-project file is created with a ' +
+                             'random project name.')
+    parser.add_argument('--hide-branch-names', dest='hide_branch_names',
+                        action='store_true',
+                        help='Obfuscate branch names. Will not send revision ' +
+                             'control branch names to api.')
     parser.add_argument('--exclude', dest='exclude', action='append',
                         help='Filename patterns to exclude from logging. ' +
                              'POSIX regex syntax. Can be used more than once.')
@@ -170,6 +194,20 @@ def parse_arguments():
                         action=StoreWithoutQuotes,
                         help='Number of seconds to wait when sending ' +
                              'heartbeats to api. Defaults to 60 seconds.')
+    parser.add_argument('--sync-offline-activity',
+                        dest='sync_offline_activity',
+                        action=StoreWithoutQuotes,
+                        help='Amount of offline activity to sync from your ' +
+                             'local ~/.wakatime.db sqlite3 file to your ' +
+                             'WakaTime Dashboard before exiting. Can be ' +
+                             '"none" or a positive integer number. Defaults ' +
+                             'to 5, meaning for every heartbeat sent while ' +
+                             'online 5 offline heartbeats are synced. Can ' +
+                             'be used without --entity to only sync offline ' +
+                             'activity without generating new heartbeats.')
+    parser.add_argument('--today', dest='today',
+                        action='store_true',
+                        help='Prints dashboard time for Today, then exits.')
     parser.add_argument('--config', dest='config', action=StoreWithoutQuotes,
                         help='Defaults to ~/.wakatime.cfg.')
     parser.add_argument('--verbose', dest='verbose', action='store_true',
@@ -214,8 +252,19 @@ def parse_arguments():
     if not args.entity:
         if args.file:
             args.entity = args.file
-        else:
+        elif (not args.sync_offline_activity or args.sync_offline_activity == 'none') and not args.today:
             parser.error('argument --entity is required')
+
+    if not args.sync_offline_activity:
+        args.sync_offline_activity = DEFAULT_SYNC_OFFLINE_ACTIVITY
+    if args.sync_offline_activity == 'none':
+        args.sync_offline_activity = 0
+    try:
+        args.sync_offline_activity = int(args.sync_offline_activity)
+        if args.sync_offline_activity < 0:
+            raise Exception('Error')
+    except:
+        parser.error('argument --sync-offline-activity must be "none" or an integer number')
 
     if not args.language and args.alternate_language:
         args.language = args.alternate_language
@@ -237,7 +286,7 @@ def parse_arguments():
         except TypeError:  # pragma: nocover
             pass
     if not args.include_only_with_project_file and configs.has_option('settings', 'include_only_with_project_file'):
-        args.include_only_with_project_file = configs.get('settings', 'include_only_with_project_file')
+        args.include_only_with_project_file = configs.get('settings', 'include_only_with_project_file') == 'true'
     if not args.include:
         args.include = []
     if configs.has_option('settings', 'include'):
@@ -249,24 +298,9 @@ def parse_arguments():
             pass
     if not args.exclude_unknown_project and configs.has_option('settings', 'exclude_unknown_project'):
         args.exclude_unknown_project = configs.getboolean('settings', 'exclude_unknown_project')
-    if not args.hide_filenames and args.hidefilenames:
-        args.hide_filenames = args.hidefilenames
-    if args.hide_filenames:
-        args.hide_filenames = ['.*']
-    else:
-        args.hide_filenames = []
-        option = None
-        if configs.has_option('settings', 'hidefilenames'):
-            option = configs.get('settings', 'hidefilenames')
-        if configs.has_option('settings', 'hide_filenames'):
-            option = configs.get('settings', 'hide_filenames')
-        if option is not None:
-            if option.strip().lower() == 'true':
-                args.hide_filenames = ['.*']
-            elif option.strip().lower() != 'false':
-                for pattern in option.split("\n"):
-                    if pattern.strip() != '':
-                        args.hide_filenames.append(pattern)
+    _boolean_or_list('hide_file_names', args, configs, alternative_names=['hide_filenames', 'hidefilenames'])
+    _boolean_or_list('hide_project_names', args, configs, alternative_names=['hide_projectnames', 'hideprojectnames'])
+    _boolean_or_list('hide_branch_names', args, configs, alternative_names=['hide_branchnames', 'hidebranchnames'], default=None)
     if args.offline_deprecated:
         args.offline = False
     if args.offline and configs.has_option('settings', 'offline'):
@@ -285,6 +319,8 @@ def parse_arguments():
                          'domain\\user:pass.')
     if configs.has_option('settings', 'no_ssl_verify'):
         args.nosslverify = configs.getboolean('settings', 'no_ssl_verify')
+    if configs.has_option('settings', 'ssl_certs_file'):
+        args.ssl_certs_file = configs.get('settings', 'ssl_certs_file')
     if not args.verbose and configs.has_option('settings', 'verbose'):
         args.verbose = configs.getboolean('settings', 'verbose')
     if not args.verbose and configs.has_option('settings', 'debug'):
@@ -307,3 +343,34 @@ def parse_arguments():
             print(traceback.format_exc())
 
     return args, configs
+
+
+def _boolean_or_list(config_name, args, configs, alternative_names=[], default=[]):
+    """Get a boolean or list of regexes from args and configs."""
+
+    # when argument flag present, set to wildcard regex
+    for key in alternative_names + [config_name]:
+        if hasattr(args, key) and getattr(args, key):
+            setattr(args, config_name, ['.*'])
+            return
+
+    setattr(args, config_name, default)
+
+    option = None
+    alternative_names.insert(0, config_name)
+    for key in alternative_names:
+        if configs.has_option('settings', key):
+            option = configs.get('settings', key)
+            break
+
+    if option is not None:
+        if option.strip().lower() == 'true':
+            setattr(args, config_name, ['.*'])
+        elif option.strip().lower() == 'false':
+            setattr(args, config_name, [])
+        else:
+            for pattern in option.split("\n"):
+                if pattern.strip() != '':
+                    if not getattr(args, config_name):
+                        setattr(args, config_name, [])
+                    getattr(args, config_name).append(pattern)

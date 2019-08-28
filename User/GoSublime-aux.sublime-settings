@@ -1,0 +1,12 @@
+{
+	"9o.hist.9o":
+	[
+		"go build",
+		"go build routine_go.go",
+		"go run routine_go.go",
+		"go -go version"
+	],
+	"ann": "a18.11.28-1",
+	"install_version": "r18.11.28-1",
+	"version": "r18.11.28-1"
+}

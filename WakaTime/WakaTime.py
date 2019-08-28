@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ ==========================================================
 File:        WakaTime.py
 Description: Automatic time tracking for Sublime Text 2 and 3.
@@ -7,7 +8,7 @@ Website:     https://wakatime.com/
 ==========================================================="""
 
 
-__version__ = '8.1.1'
+__version__ = '9.0.0'
 
 
 import sublime
@@ -18,14 +19,14 @@ import json
 import os
 import platform
 import re
+import subprocess
 import sys
 import time
 import threading
 import traceback
 import urllib
 import webbrowser
-from datetime import datetime
-from subprocess import Popen, STDOUT, PIPE
+from subprocess import STDOUT, PIPE
 from zipfile import ZipFile
 try:
     import _winreg as winreg  # py2
@@ -42,6 +43,8 @@ except ImportError:
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
+is_win = platform.system() == 'Windows'
+
 
 if is_py2:
     def u(text):
@@ -91,8 +94,22 @@ else:
     ))
 
 
+class Popen(subprocess.Popen):
+    """Patched Popen to prevent opening cmd window on Windows platform."""
+
+    def __init__(self, *args, **kwargs):
+        startupinfo = kwargs.get('startupinfo')
+        if is_win or True:
+            try:
+                startupinfo = startupinfo or subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            except AttributeError:
+                pass
+        kwargs['startupinfo'] = startupinfo
+        super(Popen, self).__init__(*args, **kwargs)
+
+
 # globals
-HEARTBEAT_FREQUENCY = 2
 ST_VERSION = int(sublime.version())
 PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
 API_CLIENT = os.path.join(PLUGIN_DIR, 'packages', 'wakatime', 'cli.py')
@@ -103,8 +120,14 @@ LAST_HEARTBEAT = {
     'file': None,
     'is_write': False,
 }
+LAST_HEARTBEAT_SENT_AT = 0
+LAST_FETCH_TODAY_CODING_TIME = 0
+FETCH_TODAY_DEBOUNCE_COUNTER = 0
+FETCH_TODAY_DEBOUNCE_SECONDS = 60
 PYTHON_LOCATION = None
 HEARTBEATS = queue.Queue()
+HEARTBEAT_FREQUENCY = 2  # minutes between logging heartbeat when editing same file
+SEND_BUFFER_SECONDS = 30  # seconds between sending buffered heartbeats to API
 
 
 # Log Levels
@@ -117,9 +140,45 @@ ERROR = 'ERROR'
 # add wakatime package to path
 sys.path.insert(0, os.path.join(PLUGIN_DIR, 'packages'))
 try:
-    from wakatime.main import parseConfigFile
+    from wakatime.configs import parseConfigFile
 except ImportError:
-    pass
+    def parseConfigFile():
+        return None
+
+
+class ApiKey(object):
+    _key = None
+
+    def read(self):
+        if self._key:
+            return self._key
+
+        key = SETTINGS.get('api_key')
+        if key:
+            self._key = key
+            return self._key
+
+        try:
+            configs = parseConfigFile()
+            if configs:
+                if configs.has_option('settings', 'api_key'):
+                    key = configs.get('settings', 'api_key')
+                    if key:
+                        self._key = key
+                        return self._key
+        except:
+            pass
+
+        return self._key
+
+    def write(self, key):
+        global SETTINGS
+        self._key = key
+        SETTINGS.set('api_key', str(key))
+        sublime.save_settings(SETTINGS_FILE)
+
+
+APIKEY = ApiKey()
 
 
 def set_timeout(callback, seconds):
@@ -160,45 +219,101 @@ def resources_folder():
         return os.path.join(os.path.expanduser('~'), '.wakatime')
 
 
-def update_status_bar(status):
+def update_status_bar(status=None, debounced=False, msg=None):
     """Updates the status bar."""
+    global LAST_FETCH_TODAY_CODING_TIME, FETCH_TODAY_DEBOUNCE_COUNTER
 
     try:
-        if SETTINGS.get('status_bar_message'):
-            msg = datetime.now().strftime(SETTINGS.get('status_bar_message_fmt'))
-            if '{status}' in msg:
-                msg = msg.format(status=status)
+        if not msg and SETTINGS.get('status_bar_message') is not False and SETTINGS.get('status_bar_enabled'):
+            if SETTINGS.get('status_bar_coding_activity') and status == 'OK':
+                if debounced:
+                    FETCH_TODAY_DEBOUNCE_COUNTER -= 1
+                if debounced or not LAST_FETCH_TODAY_CODING_TIME:
+                    now = int(time.time())
+                    if LAST_FETCH_TODAY_CODING_TIME and (FETCH_TODAY_DEBOUNCE_COUNTER > 0 or LAST_FETCH_TODAY_CODING_TIME > now - FETCH_TODAY_DEBOUNCE_SECONDS):
+                        return
+                    LAST_FETCH_TODAY_CODING_TIME = now
+                    FetchStatusBarCodingTime().start()
+                    return
+                else:
+                    FETCH_TODAY_DEBOUNCE_COUNTER += 1
+                    set_timeout(lambda: update_status_bar(status, debounced=True), FETCH_TODAY_DEBOUNCE_SECONDS)
+                    return
+            else:
+                msg = 'WakaTime: {status}'.format(status=status)
 
+        if msg:
             active_window = sublime.active_window()
             if active_window:
                 for view in active_window.views():
                     view.set_status('wakatime', msg)
+
     except RuntimeError:
-        set_timeout(lambda: update_status_bar(status), 0)
+        set_timeout(lambda: update_status_bar(status=status, debounced=debounced, msg=msg), 0)
+
+
+class FetchStatusBarCodingTime(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+        self.debug = SETTINGS.get('debug')
+        self.api_key = APIKEY.read() or ''
+        self.proxy = SETTINGS.get('proxy')
+        self.python_binary = SETTINGS.get('python_binary')
+
+    def run(self):
+        if not self.api_key:
+            log(DEBUG, 'Missing WakaTime API key.')
+            return
+
+        python = self.python_binary
+        if not python or not python.strip():
+            python = python_binary()
+        if not python:
+            log(DEBUG, 'Missing Python.')
+            return
+
+        ua = 'sublime/%d sublime-wakatime/%s' % (ST_VERSION, __version__)
+        cmd = [
+            python,
+            API_CLIENT,
+            '--today',
+            '--key', str(bytes.decode(self.api_key.encode('utf8'))),
+            '--plugin', ua,
+        ]
+        if self.debug:
+            cmd.append('--verbose')
+        if self.proxy:
+            cmd.extend(['--proxy', self.proxy])
+
+        log(DEBUG, ' '.join(obfuscate_apikey(cmd)))
+        try:
+            process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            output, err = process.communicate()
+            output = u(output)
+            retcode = process.poll()
+            if not retcode and output:
+                msg = 'Today: {output}'.format(output=output)
+                update_status_bar(msg=msg)
+            else:
+                log(DEBUG, 'wakatime-core today exited with status: {0}'.format(retcode))
+                if output:
+                    log(DEBUG, u('wakatime-core today output: {0}').format(output))
+        except:
+            pass
 
 
 def prompt_api_key():
-    global SETTINGS
-
-    if SETTINGS.get('api_key'):
+    if APIKEY.read():
         return True
-
-    default_key = ''
-    try:
-        configs = parseConfigFile()
-        if configs is not None:
-            if configs.has_option('settings', 'api_key'):
-                default_key = configs.get('settings', 'api_key')
-    except:
-        pass
 
     window = sublime.active_window()
     if window:
         def got_key(text):
             if text:
-                SETTINGS.set('api_key', str(text))
-                sublime.save_settings(SETTINGS_FILE)
-        window.show_input_panel('[WakaTime] Enter your wakatime.com api key:', default_key, got_key, None, None)
+                APIKEY.write(text)
+        window.show_input_panel('[WakaTime] Enter your wakatime.com api key:', '', got_key, None, None)
         return True
     else:
         log(ERROR, 'Could not prompt for api key because no window found.')
@@ -433,11 +548,18 @@ def append_heartbeat(entity, timestamp, is_write, view, project, folders):
     }
 
     # process the queue of heartbeats in the future
-    seconds = 4
-    set_timeout(process_queue, seconds)
+    set_timeout(lambda: process_queue(timestamp), SEND_BUFFER_SECONDS)
 
 
-def process_queue():
+def process_queue(timestamp):
+    global LAST_HEARTBEAT_SENT_AT
+
+    # Prevent sending heartbeats more often than SEND_BUFFER_SECONDS
+    now = int(time.time())
+    if timestamp != LAST_HEARTBEAT['time'] and LAST_HEARTBEAT_SENT_AT > now - SEND_BUFFER_SECONDS:
+        return
+    LAST_HEARTBEAT_SENT_AT = now
+
     try:
         heartbeat = HEARTBEATS.get_nowait()
     except queue.Empty:
@@ -466,7 +588,7 @@ class SendHeartbeatsThread(threading.Thread):
         threading.Thread.__init__(self)
 
         self.debug = SETTINGS.get('debug')
-        self.api_key = SETTINGS.get('api_key', '')
+        self.api_key = APIKEY.read() or ''
         self.ignore = SETTINGS.get('ignore', [])
         self.include = SETTINGS.get('include', [])
         self.hidefilenames = SETTINGS.get('hidefilenames')
@@ -542,19 +664,16 @@ class SendHeartbeatsThread(threading.Thread):
             if self.has_extra_heartbeats:
                 cmd.append('--extra-heartbeats')
                 stdin = PIPE
-                extra_heartbeats = [self.build_heartbeat(**x) for x in self.extra_heartbeats]
-                extra_heartbeats = json.dumps(extra_heartbeats)
+                extra_heartbeats = json.dumps([self.build_heartbeat(**x) for x in self.extra_heartbeats])
+                inp = "{0}\n".format(extra_heartbeats).encode('utf-8')
             else:
                 extra_heartbeats = None
                 stdin = None
+                inp = None
 
             log(DEBUG, ' '.join(obfuscate_apikey(cmd)))
             try:
                 process = Popen(cmd, stdin=stdin, stdout=PIPE, stderr=STDOUT)
-                inp = None
-                if self.has_extra_heartbeats:
-                    inp = "{0}\n".format(extra_heartbeats)
-                    inp = inp.encode('utf-8')
                 output, err = process.communicate(input=inp)
                 output = u(output)
                 retcode = process.poll()
@@ -624,7 +743,7 @@ def plugin_loaded():
     SETTINGS = sublime.load_settings(SETTINGS_FILE)
 
     log(INFO, 'Initializing WakaTime plugin v%s' % __version__)
-    update_status_bar('Initializing')
+    update_status_bar('Initializing...')
 
     if not python_binary():
         log(WARNING, 'Python binary not found.')
@@ -640,6 +759,7 @@ def plugin_loaded():
 def after_loaded():
     if not prompt_api_key():
         set_timeout(after_loaded, 0.5)
+    update_status_bar('OK')
 
 
 # need to call plugin_loaded because only ST3 will auto-call it

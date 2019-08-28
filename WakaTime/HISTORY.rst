@@ -3,6 +3,157 @@ History
 -------
 
 
+9.0.0 (2019-06-23)
+++++++++++++++++++
+
+- New optional config option hide_branch_names.
+  `wakatime#183 <https://github.com/wakatime/wakatime/issues/183>`_
+
+
+8.7.0 (2019-05-29)
+++++++++++++++++++
+
+- Prevent creating user sublime-settings file when api key already exists in
+  common wakatime.cfg file.
+  `#98 <https://github.com/wakatime/sublime-wakatime/issues/98>`_
+
+
+8.6.1 (2019-05-28)
+++++++++++++++++++
+
+- Fix parsing common wakatime.cfg file.
+  `#98 <https://github.com/wakatime/sublime-wakatime/issues/98>`_
+
+
+8.6.0 (2019-05-27)
+++++++++++++++++++
+
+- Prevent prompting for api key when found from config file.
+  `#98 <https://github.com/wakatime/sublime-wakatime/issues/98>`_
+
+
+8.5.0 (2019-05-10)
+++++++++++++++++++
+
+- Remove clock icon from status bar.
+- Use wakatime-cli to fetch status bar coding time.
+
+
+8.4.2 (2019-05-07)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v11.0.0.
+- Rename argument --show-time-today to --today.
+- New argument --show-time-today for printing Today's coding time.
+
+
+8.4.1 (2019-05-01)
+++++++++++++++++++
+
+- Use api subdomain for fetching today's coding activity.
+
+
+8.4.0 (2019-05-01)
+++++++++++++++++++
+
+- Show today's coding time in status bar.
+
+
+8.3.6 (2019-04-30)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.8.4.
+- Use wakatime fork of certifi package.
+  `#95 <https://github.com/wakatime/sublime-wakatime/issues/95>`_
+
+
+8.3.5 (2019-04-30)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.8.3.
+- Upgrade certifi to version 2019.03.09.
+
+
+8.3.4 (2019-03-30)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.8.2.
+- Detect go.mod files as Go language.
+  `jetbrains-wakatime#119 <https://github.com/wakatime/jetbrains-wakatime/issues/119>`_
+- Detect C++ language from all C++ file extensions.
+  `vscode-wakatime#87 <https://github.com/wakatime/vscode-wakatime/issues/87>`_
+- Add ssl_certs_file arg and config for custom ca bundles.
+  `wakatime#164 <https://github.com/wakatime/wakatime/issues/164>`_
+- Fix bug causing random project names when hide project names enabled.
+  `vscode-wakatime#162 <https://github.com/wakatime/vscode-wakatime/issues/61>`_
+- Add support for UNC network shares without drive letter mapped on Winows.
+  `wakatime#162 <https://github.com/wakatime/wakatime/issues/162>`_
+
+
+8.3.3 (2018-12-19)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.6.1.
+- Correctly parse include_only_with_project_file when set to false.
+  `wakatime#161 <https://github.com/wakatime/wakatime/issues/161>`_
+- Support language argument for non-file entity types.
+- Send 25 heartbeats per API request.
+- New category "Writing Tests".
+  `wakatime#156 <https://github.com/wakatime/wakatime/issues/156>`_
+- Fix bug caused by git config section without any submodule option defined.
+  `wakatime#152 <https://github.com/wakatime/wakatime/issues/152>`_
+
+
+8.3.2 (2018-10-06)
+++++++++++++++++++
+
+- Send buffered heartbeats to API every 30 seconds.
+
+
+8.3.1 (2018-10-05)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.4.1.
+- Send 50 offline heartbeats to API per request with 1 second delay in between.
+
+
+8.3.0 (2018-10-03)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.4.0.
+- Support logging coding activity to remote network drive files on Windows
+  platform by detecting UNC path from drive letter.
+  `wakatime#72 <https://github.com/wakatime/wakatime/issues/72>`_
+
+
+8.2.0 (2018-09-30)
+++++++++++++++++++
+
+- Prevent opening cmd window on Windows when running wakatime-cli.
+  `#91 <https://github.com/wakatime/sublime-wakatime/issues/91>`_
+- Upgrade wakatime-cli to v10.3.0.
+- Re-enable detecting projects from Subversion folder on Windows platform.
+- Prevent opening cmd window on Windows when detecting project from Subversion.
+- Run tests on Windows using Appveyor.
+
+
+8.1.2 (2018-09-20)
+++++++++++++++++++
+
+- Upgrade wakatime-cli to v10.2.4.
+- Default --sync-offline-activity to 100 instead of 5, so offline coding is
+  synced to dashboard faster.
+- Batch heartbeats in groups of 10 per api request.
+- New config hide_project_name and argument --hide-project-names for
+  obfuscating project names when sending coding activity to api.
+- Fix mispelled Gosu language.
+  `wakatime#137 <https://github.com/wakatime/wakatime/issues/137>`_
+- Remove metadata when hiding project or file names.
+- New --local-file argument to be used when --entity is a remote file.
+- New argument --sync-offline-activity for configuring the maximum offline
+  heartbeats to sync to the WakaTime API.
+
+
 8.1.1 (2018-04-26)
 ++++++++++++++++++
 
@@ -33,10 +184,10 @@ History
 - Upgrade wakatime-cli to v10.1.2.
 - Detect dependencies from Swift, Objective-C, TypeScript and JavaScript files.
 - Categorize .mjs files as JavaScript.
-  `#wakatime121 <https://github.com/wakatime/wakatime/issues/121>`_
+  `wakatime#121 <https://github.com/wakatime/wakatime/issues/121>`_
 - Detect dependencies from Elm, Haskell, Haxe, Kotlin, Rust, and Scala files.
 - Improved Matlab vs Objective-C language detection.
-  `#wakatime129 <https://github.com/wakatime/wakatime/issues/129>`_
+  `wakatime#129 <https://github.com/wakatime/wakatime/issues/129>`_
 
 
 8.0.6 (2018-01-04)

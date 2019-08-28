@@ -14,6 +14,7 @@ from __future__ import print_function
 import logging
 import os
 import sys
+import time
 import traceback
 
 pwd = os.path.dirname(os.path.abspath(__file__))
@@ -21,10 +22,10 @@ sys.path.insert(0, os.path.dirname(pwd))
 sys.path.insert(0, os.path.join(pwd, 'packages'))
 
 from .__about__ import __version__
-from .api import send_heartbeats
+from .api import send_heartbeats, get_time_today
 from .arguments import parse_arguments
 from .compat import u, json
-from .constants import SUCCESS, UNKNOWN_ERROR
+from .constants import SUCCESS, UNKNOWN_ERROR, HEARTBEATS_PER_REQUEST
 from .logger import setup_logging
 
 log = logging.getLogger('WakaTime')
@@ -40,6 +41,12 @@ def execute(argv=None):
     args, configs = parse_arguments()
 
     setup_logging(args, __version__)
+
+    if args.today:
+        text, retval = get_time_today(args)
+        if text:
+            print(text)
+        return retval
 
     try:
         heartbeats = []
@@ -63,12 +70,23 @@ def execute(argv=None):
                     msg=u(ex),
                 ))
 
-        retval = send_heartbeats(heartbeats, args, configs)
+        retval = SUCCESS
+        while heartbeats:
+            retval = send_heartbeats(heartbeats[:HEARTBEATS_PER_REQUEST], args, configs)
+            heartbeats = heartbeats[HEARTBEATS_PER_REQUEST:]
+            if retval != SUCCESS:
+                break
+
+        if heartbeats:
+            Queue(args, configs).push_many(heartbeats)
+
         if retval == SUCCESS:
             queue = Queue(args, configs)
-            offline_heartbeats = queue.pop_many()
-            if len(offline_heartbeats) > 0:
+            for offline_heartbeats in queue.pop_many(args.sync_offline_activity):
+                time.sleep(1)
                 retval = send_heartbeats(offline_heartbeats, args, configs)
+                if retval != SUCCESS:
+                    break
 
         return retval
 

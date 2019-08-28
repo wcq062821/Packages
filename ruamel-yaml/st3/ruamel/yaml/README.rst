@@ -4,6 +4,13 @@ ruamel.yaml
 
 ``ruamel.yaml`` is a YAML 1.2 loader/dumper package for Python.
 
+:version:       0.15.81
+:updated:       2018-12-06
+:documentation: http://yaml.readthedocs.io
+:repository:    https://bitbucket.org/ruamel/
+:pypi:          https://pypi.org/project/ruamel.yaml/
+
+
 Starting with version 0.15.0 the way YAML files are loaded and dumped
 is changing. See the API doc for details.  Currently existing
 functionality will throw a warning before being changed/removed.
@@ -12,7 +19,7 @@ functionality will throw a warning before being changed/removed.
 but new functionality is likely only to be available via the new API.
 
 If your package uses ``ruamel.yaml`` and is not listed on PyPI, drop
-me an email, preferably with some infomormation on how you use the
+me an email, preferably with some information on how you use the
 package (or a link to bitbucket/github) and I'll keep you informed
 when the status of the API is stable enough to make the transition.
 
@@ -30,10 +37,327 @@ when the status of the API is stable enough to make the transition.
 .. image:: https://bestpractices.coreinfrastructure.org/projects/1128/badge
    :target: https://bestpractices.coreinfrastructure.org/projects/1128
 
+.. image:: https://bitbucket.org/ruamel/yaml/raw/default/_doc/_static/license.svg
+   :target: https://opensource.org/licenses/MIT
+
+.. image:: https://bitbucket.org/ruamel/yaml/raw/default/_doc/_static/pypi.svg
+   :target: https://pypi.org/project/ruamel.yaml/
+
+.. image:: https://bitbucket.org/ruamel/oitnb/raw/default/_doc/_static/oitnb.svg
+   :target: https://pypi.org/project/oitnb/
+
+.. image:: http://www.mypy-lang.org/static/mypy_badge.svg
+   :target: http://mypy-lang.org/
+
 ChangeLog
 =========
 
-.. should insert NEXT: at the beginning of line for next key
+.. should insert NEXT: at the beginning of line for next key (with empty line)
+
+0.15.81 (2018-12-06):
+ - fix issue dumping methods of metaclass derived classes (reported and fix provided
+   by `Douglas Raillard <https://bitbucket.org/DouglasRaillard/>`__)
+
+0.15.80 (2018-11-26):
+ - fix issue emitting BEL character when round-tripping invalid folded input
+   (reported by Isaac on `StackOverflow <https://stackoverflow.com/a/53471217/1307905>`__)
+    
+0.15.79 (2018-11-21):
+  - fix issue with anchors nested deeper than alias (reported by gaFF on
+    `StackOverflow <https://stackoverflow.com/a/53397781/1307905>`__)
+
+0.15.78 (2018-11-15):
+  - fix setup issue for 3.8 (reported by `Sidney Kuyateh 
+    <https://bitbucket.org/autinerd/>`__)
+
+0.15.77 (2018-11-09):
+  - setting `yaml.sort_base_mapping_type_on_output = False`, will prevent
+    explicit sorting by keys in the base representer of mappings. Roundtrip
+    already did not do this. Usage only makes real sense for Python 3.6+
+    (feature request by `Sebastian Gerber <https://bitbucket.org/spacemanspiff2007/>`__).
+  - implement Python version check in YAML metadata in ``_test/test_z_data.py``
+
+0.15.76 (2018-11-01):
+  - fix issue with empty mapping and sequence loaded as flow-style
+    (mapping reported by `Min RK <https://bitbucket.org/minrk/>`__, sequence
+    by `Maged Ahmed <https://bitbucket.org/maged2/>`__)
+
+0.15.75 (2018-10-27):
+  - fix issue with single '?' scalar (reported by `Terrance 
+    <https://bitbucket.org/OllieTerrance/>`__)
+  - fix issue with duplicate merge keys (prompted by `answering 
+    <https://stackoverflow.com/a/52852106/1307905>`__ a 
+    `StackOverflow question <https://stackoverflow.com/q/52851168/1307905>`__
+    by `math <https://stackoverflow.com/users/1355634/math>`__)
+
+0.15.74 (2018-10-17):
+  - fix dropping of comment on rt before sequence item that is sequence item
+    (reported by `Thorsten Kampe <https://bitbucket.org/thorstenkampe/>`__)
+
+0.15.73 (2018-10-16):
+  - fix irregular output on pre-comment in sequence within sequence (reported
+    by `Thorsten Kampe <https://bitbucket.org/thorstenkampe/>`__)
+  - allow non-compact (i.e. next line) dumping sequence/mapping within sequence.
+
+0.15.72 (2018-10-06):
+  - fix regression on explicit 1.1 loading with the C based scanner/parser
+    (reported by `Tomas Vavra <https://bitbucket.org/xtomik/>`__)
+
+0.15.71 (2018-09-26):
+  - some of the tests now live in YAML files in the 
+    `yaml.data <https://bitbucket.org/ruamel/yaml.data>`__ repository. 
+    ``_test/test_z_data.py`` processes these.
+  - fix regression where handcrafted CommentedMaps could not be initiated (reported by 
+    `Dan Helfman <https://bitbucket.org/dhelfman/>`__)
+  - fix regression with non-root literal scalars that needed indent indicator
+    (reported by `Clark Breyman <https://bitbucket.org/clarkbreyman/>`__)
+  - tag:yaml.org,2002:python/object/apply now also uses __qualname__ on PY3
+    (reported by `Douglas RAILLARD <https://bitbucket.org/DouglasRaillard/>`__)
+  - issue with self-referring object creation
+    (reported and fix by `Douglas RAILLARD <https://bitbucket.org/DouglasRaillard/>`__)
+
+0.15.70 (2018-09-21):
+  - reverted CommentedMap and CommentedSeq to subclass ordereddict resp. list,
+    reimplemented merge maps so that both ``dict(**commented_map_instance)`` and JSON
+    dumping works. This also allows checking with ``isinstance()`` on ``dict`` resp. ``list``.
+    (Proposed by `Stuart Berg <https://bitbucket.org/stuarteberg/>`__, with feedback
+    from `blhsing <https://stackoverflow.com/users/6890912/blhsing>`__ on
+    `StackOverflow <https://stackoverflow.com/q/52314186/1307905>`__)
+
+0.15.69 (2018-09-20):
+  - fix issue with dump_all gobbling end-of-document comments on parsing
+    (reported by `Pierre B. <https://bitbucket.org/octplane/>`__)
+
+0.15.68 (2018-09-20):
+  - fix issue with parsabel, but incorrect output with nested flow-style sequences
+    (reported by `Dougal Seeley <https://bitbucket.org/dseeley/>`__)
+  - fix issue with loading Python objects that have __setstate__ and recursion in parameters
+    (reported by `Douglas RAILLARD <https://bitbucket.org/DouglasRaillard/>`__)
+
+0.15.67 (2018-09-19):
+  - fix issue with extra space inserted with non-root literal strings 
+    (Issue reported and PR with fix provided by 
+    `Naomi Seyfer <https://bitbucket.org/sixolet/>`__.)
+
+0.15.66 (2018-09-07):
+  - fix issue with fold indicating characters inserted in safe_load-ed folded strings
+    (reported by `Maximilian Hils <https://bitbucket.org/mhils/>`__).
+
+0.15.65 (2018-09-07):
+  - fix issue #232 revert to throw ParserError for unexcpected ``]``
+    and ``}`` instead of IndexError. (Issue reported and PR with fix
+    provided by `Naomi Seyfer <https://bitbucket.org/sixolet/>`__.)
+  - added ``key`` and ``reverse`` parameter (suggested by Jannik Klemm via email)
+  - indent root level literal scalars that have directive or document end markers
+    at the beginning of a line
+
+0.15.64 (2018-08-30):
+  - support round-trip of tagged sequences: ``!Arg [a, {b: 1}]``
+  - single entry mappings in flow sequences now written by default without braces,
+    set ``yaml.brace_single_entry_mapping_in_flow_sequence=True`` to force
+    getting ``[a, {b: 1}, {c: {d: 2}}]`` instead of the default ``[a, b: 1, c: {d: 2}]``
+  - fix issue when roundtripping floats starting with a dot such as ``.5``
+    (reported by `Harrison Gregg <https://bitbucket.org/HarrisonGregg/>`__)
+
+0.15.63 (2018-08-29):
+  - small fix only necessary for Windows users that don't use wheels.
+
+0.15.62 (2018-08-29):
+  - C based reader/scanner & emitter now allow setting of 1.2 as YAML version.
+    ** The loading/dumping is still YAML 1.1 code**, so use the common subset of
+    YAML 1.2 and 1.1 (reported by `Ge Yang <https://bitbucket.org/yangge/>`__)
+
+0.15.61 (2018-08-23):
+  - support for round-tripping folded style scalars (initially requested 
+    by `Johnathan Viduchinsky <https://bitbucket.org/johnathanvidu/>`__)
+  - update of C code
+  - speed up of scanning (~30% depending on the input)
+
+0.15.60 (2018-08-18):
+  - again allow single entry map in flow sequence context (reported by 
+    `Lee Goolsbee <https://bitbucket.org/lgoolsbee/>`__)
+  - cleanup for mypy 
+  - spurious print in library (reported by 
+    `Lele Gaifax <https://bitbucket.org/lele/>`__), now automatically checked 
+
+0.15.59 (2018-08-17):
+  - issue with C based loader and leading zeros (reported by 
+    `Tom Hamilton Stubber <https://bitbucket.org/TomHamiltonStubber/>`__)
+
+0.15.58 (2018-08-17):
+  - simple mappings can now be used as keys when round-tripping::
+
+      {a: 1, b: 2}: hello world
+      
+    although using the obvious operations (del, popitem) on the key will
+    fail, you can mutilate it by going through its attributes. If you load the
+    above YAML in `d`, then changing the value is cumbersome:
+
+        d = {CommentedKeyMap([('a', 1), ('b', 2)]): "goodbye"}
+
+    and changing the key even more so:
+
+        d[CommentedKeyMap([('b', 1), ('a', 2)])] = d.pop(
+                     CommentedKeyMap([('a', 1), ('b', 2)]))
+
+    (you can use a `dict` instead of a list of tuples (or ordereddict), but that might result
+    in a different order, of the keys of the key, in the output)
+  - check integers to dump with 1.2 patterns instead of 1.1 (reported by 
+    `Lele Gaifax <https://bitbucket.org/lele/>`__)
+  
+
+0.15.57 (2018-08-15):
+  - Fix that CommentedSeq could no longer be used in adding or do a sort
+    (reported by `Christopher Wright <https://bitbucket.org/CJ-Wright4242/>`__)
+
+0.15.56 (2018-08-15):
+  - fix issue with ``python -O`` optimizing away code (reported, and detailed cause
+    pinpointed, by `Alex Grönholm <https://bitbucket.org/agronholm/>`__)
+
+0.15.55 (2018-08-14):
+  - unmade ``CommentedSeq`` a subclass of ``list``. It is now
+    indirectly a subclass of the standard
+    ``collections.abc.MutableSequence`` (without .abc if you are
+    still on Python2.7). If you do ``isinstance(yaml.load('[1, 2]'),
+    list)``) anywhere in your code replace ``list`` with
+    ``MutableSequence``.  Directly, ``CommentedSeq`` is a subclass of
+    the abstract baseclass ``ruamel.yaml.compat.MutableScliceableSequence``,
+    with the result that *(extended) slicing is supported on 
+    ``CommentedSeq``*.
+    (reported by `Stuart Berg <https://bitbucket.org/stuarteberg/>`__)
+  - duplicate keys (or their values) with non-ascii now correctly
+    report in Python2, instead of raising a Unicode error.
+    (Reported by `Jonathan Pyle <https://bitbucket.org/jonathan_pyle/>`__)
+
+0.15.54 (2018-08-13):
+  - fix issue where a comment could pop-up twice in the output (reported by 
+    `Mike Kazantsev <https://bitbucket.org/mk_fg/>`__ and by 
+    `Nate Peterson <https://bitbucket.org/ndpete21/>`__)
+  - fix issue where JSON object (mapping) without spaces was not parsed
+    properly (reported by `Marc Schmidt <https://bitbucket.org/marcj/>`__)
+  - fix issue where comments after empty flow-style mappings were not emitted
+    (reported by `Qinfench Chen <https://bitbucket.org/flyin5ish/>`__)
+
+0.15.53 (2018-08-12):
+  - fix issue with flow style mapping with comments gobbled newline (reported
+    by `Christopher Lambert <https://bitbucket.org/XN137/>`__)
+  - fix issue where single '+' under YAML 1.2 was interpreted as
+    integer, erroring out (reported by `Jethro Yu
+    <https://bitbucket.org/jcppkkk/>`__)
+
+0.15.52 (2018-08-09):
+  - added `.copy()` mapping representation for round-tripping
+    (``CommentedMap``) to fix incomplete copies of merged mappings
+    (reported by `Will Richards
+    <https://bitbucket.org/will_richards/>`__) 
+  - Also unmade that class a subclass of ordereddict to solve incorrect behaviour
+    for ``{**merged-mapping}`` and ``dict(**merged-mapping)`` (reported independently by
+    `Tim Olsson <https://bitbucket.org/tgolsson/>`__ and 
+    `Filip Matzner <https://bitbucket.org/FloopCZ/>`__)
+
+0.15.51 (2018-08-08):
+  - Fix method name dumps (were not dotted) and loads (reported by `Douglas Raillard 
+    <https://bitbucket.org/DouglasRaillard/>`__)
+  - Fix spurious trailing white-space caused when the comment start
+    column was no longer reached and there was no actual EOL comment
+    (e.g. following empty line) and doing substitutions, or when
+    quotes around scalars got dropped.  (reported by `Thomas Guillet
+    <https://bitbucket.org/guillett/>`__)
+
+0.15.50 (2018-08-05):
+  - Allow ``YAML()`` as a context manager for output, thereby making it much easier
+    to generate multi-documents in a stream. 
+  - Fix issue with incorrect type information for `load()` and `dump()` (reported 
+    by `Jimbo Jim <https://bitbucket.org/jimbo1qaz/>`__)
+
+0.15.49 (2018-08-05):
+  - fix preservation of leading newlines in root level literal style scalar,
+    and preserve comment after literal style indicator (``|  # some comment``)
+    Both needed for round-tripping multi-doc streams in 
+    `ryd <https://pypi.org/project/ryd/>`__.
+
+0.15.48 (2018-08-03):
+  - housekeeping: ``oitnb`` for formatting, mypy 0.620 upgrade and conformity
+
+0.15.47 (2018-07-31):
+  - fix broken 3.6 manylinux1, the result of an unclean ``build`` (reported by 
+    `Roman Sichnyi <https://bitbucket.org/rsichnyi-gl/>`__)
+
+
+0.15.46 (2018-07-29):
+  - fixed DeprecationWarning for importing from ``collections`` on 3.7
+    (issue 210, reported by `Reinoud Elhorst
+    <https://bitbucket.org/reinhrst/>`__). It was `difficult to find
+    why tox/pytest did not report
+    <https://stackoverflow.com/q/51573204/1307905>`__ and as time
+    consuming to actually `fix
+    <https://stackoverflow.com/a/51573205/1307905>`__ the tests.
+
+0.15.45 (2018-07-26):
+  - After adding failing test for ``YAML.load_all(Path())``, remove StopIteration 
+    (PR provided by `Zachary Buhman <https://bitbucket.org/buhman/>`__,
+    also reported by `Steven Hiscocks <https://bitbucket.org/sdhiscocks/>`__.
+
+0.15.44 (2018-07-14):
+  - Correct loading plain scalars consisting of numerals only and
+    starting with `0`, when not explicitly specifying YAML version
+    1.1. This also fixes the issue about dumping string `'019'` as
+    plain scalars as reported by `Min RK
+    <https://bitbucket.org/minrk/>`__, that prompted this chance.
+
+0.15.43 (2018-07-12):
+  - merge PR33: Python2.7 on Windows is narrow, but has no
+    ``sysconfig.get_config_var('Py_UNICODE_SIZE')``. (merge provided by
+    `Marcel Bargull <https://bitbucket.org/mbargull/>`__)
+  - ``register_class()`` now returns class (proposed by
+    `Mike Nerone <https://bitbucket.org/Manganeez/>`__}
+
+0.15.42 (2018-07-01):
+  - fix regression showing only on narrow Python 2.7 (py27mu) builds
+    (with help from
+    `Marcel Bargull <https://bitbucket.org/mbargull/>`__ and
+    `Colm O'Connor <https://bitbucket.org/colmoconnorgithub/>`__).
+  - run pre-commit ``tox`` on Python 2.7 wide and narrow, as well as
+    3.4/3.5/3.6/3.7/pypy
+
+0.15.41 (2018-06-27):
+  - add detection of C-compile failure (investigation prompted by
+    `StackOverlow <https://stackoverflow.com/a/51057399/1307905>`__ by
+    `Emmanuel Blot <https://stackoverflow.com/users/8233409/emmanuel-blot>`__),
+    which was removed while no longer dependent on ``libyaml``, C-extensions
+    compilation still needs a compiler though.
+
+0.15.40 (2018-06-18):
+  - added links to landing places as suggested in issue 190 by
+    `KostisA <https://bitbucket.org/ankostis/>`__
+  - fixes issue #201: decoding unicode escaped tags on Python2, reported
+    by `Dan Abolafia <https://bitbucket.org/danabo/>`__
+
+0.15.39 (2018-06-17):
+  - merge PR27 improving package startup time (and loading when regexp not
+    actually used), provided by
+    `Marcel Bargull <https://bitbucket.org/mbargull/>`__
+
+0.15.38 (2018-06-13):
+  - fix for losing precision when roundtripping floats by
+    `Rolf Wojtech <https://bitbucket.org/asomov/>`__
+  - fix for hardcoded dir separator not working for Windows by
+    `Nuno André <https://bitbucket.org/nu_no/>`__
+  - typo fix by `Andrey Somov <https://bitbucket.org/asomov/>`__
+
+0.15.37 (2018-03-21):
+  - again trying to create installable files for 187
+
+0.15.36 (2018-02-07):
+  - fix issue 187, incompatibility of C extension with 3.7 (reported by
+    Daniel Blanchard)
+
+0.15.35 (2017-12-03):
+  - allow ``None`` as stream when specifying ``transform`` parameters to
+    ``YAML.dump()``.
+    This is useful if the transforming function doesn't return a meaningful value
+    (inspired by `StackOverflow <https://stackoverflow.com/q/47614862/1307905>`__ by
+    `rsaw <https://stackoverflow.com/users/406281/rsaw>`__).
 
 0.15.34 (2017-09-17):
   - fix for issue 157: CDumper not dumping floats (reported by Jan Smitka)
@@ -99,7 +423,7 @@ ChangeLog
   - fix for round_tripping singe excl. mark tags doubling (reported and fix by Jan Brezina)
 
 0.15.21 (2017-07-25):
-  - fix for writing unicode in new API, (reported on 
+  - fix for writing unicode in new API, (reported on
     `StackOverflow <https://stackoverflow.com/a/45281922/1307905>`__
 
 0.15.20 (2017-07-23):

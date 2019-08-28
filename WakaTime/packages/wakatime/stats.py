@@ -25,6 +25,7 @@ from .packages.pygments.lexers import (
     _fn_matches,
     basename,
     ClassNotFound,
+    CppLexer,
     find_lexer_class,
     get_lexer_by_name,
 )
@@ -40,36 +41,33 @@ log = logging.getLogger('WakaTime')
 
 
 def get_file_stats(file_name, entity_type='file', lineno=None, cursorpos=None,
-                   plugin=None, language=None):
-    if entity_type != 'file':
-        stats = {
-            'language': None,
-            'dependencies': [],
-            'lines': None,
-            'lineno': lineno,
-            'cursorpos': cursorpos,
-        }
-    else:
-        language, lexer = standardize_language(language, plugin)
+                   plugin=None, language=None, local_file=None):
+    """Returns a hash of information about the entity."""
+
+    language = standardize_language(language, plugin)
+    stats = {
+        'language': language,
+        'dependencies': [],
+        'lines': None,
+        'lineno': lineno,
+        'cursorpos': cursorpos,
+    }
+
+    if entity_type == 'file':
+        lexer = get_lexer(language)
         if not language:
-            language, lexer = guess_language(file_name)
+            language, lexer = guess_language(file_name, local_file)
+        parser = DependencyParser(local_file or file_name, lexer)
+        stats.update({
+            'language': use_root_language(language, lexer),
+            'dependencies': parser.parse(),
+            'lines': number_lines_in_file(local_file or file_name),
+        })
 
-        language = use_root_language(language, lexer)
-
-        parser = DependencyParser(file_name, lexer)
-        dependencies = parser.parse()
-
-        stats = {
-            'language': language,
-            'dependencies': dependencies,
-            'lines': number_lines_in_file(file_name),
-            'lineno': lineno,
-            'cursorpos': cursorpos,
-        }
     return stats
 
 
-def guess_language(file_name):
+def guess_language(file_name, local_file):
     """Guess lexer and language for a file.
 
     Returns a tuple of (language_str, lexer_obj).
@@ -81,14 +79,14 @@ def guess_language(file_name):
     if language:
         lexer = get_lexer(language)
     else:
-        lexer = smart_guess_lexer(file_name)
+        lexer = smart_guess_lexer(file_name, local_file)
         if lexer:
             language = u(lexer.name)
 
     return language, lexer
 
 
-def smart_guess_lexer(file_name):
+def smart_guess_lexer(file_name, local_file):
     """Guess Pygments lexer for a file.
 
     Looks for a vim modeline in file contents, then compares the accuracy
@@ -99,7 +97,7 @@ def smart_guess_lexer(file_name):
 
     text = get_file_head(file_name)
 
-    lexer1, accuracy1 = guess_lexer_using_filename(file_name, text)
+    lexer1, accuracy1 = guess_lexer_using_filename(local_file or file_name, text)
     lexer2, accuracy2 = guess_lexer_using_modeline(text)
 
     if lexer1:
@@ -171,6 +169,10 @@ def get_language_from_extension(file_name):
     """
 
     filepart, extension = os.path.splitext(file_name)
+    pathpart, filename = os.path.split(file_name)
+
+    if filename == 'go.mod':
+        return 'Go'
 
     if re.match(r'\.h.*$', extension, re.IGNORECASE) or re.match(r'\.c.*$', extension, re.IGNORECASE):
 
@@ -184,8 +186,12 @@ def get_language_from_extension(file_name):
             return 'Objective-C++'
 
         available_extensions = extensions_in_same_folder(file_name)
-        if '.cpp' in available_extensions:
-            return 'C++'
+
+        for ext in CppLexer.filenames:
+            ext = ext.lstrip('*')
+            if ext in available_extensions:
+                return 'C++'
+
         if '.c' in available_extensions:
             return 'C'
 
@@ -222,22 +228,21 @@ def number_lines_in_file(file_name):
 def standardize_language(language, plugin):
     """Maps a string to the equivalent Pygments language.
 
-    Returns a tuple of (language_str, lexer_obj).
+    Returns the standardized language string.
     """
 
     if not language:
-        return None, None
+        return None
 
     # standardize language for this plugin
     if plugin:
         plugin = plugin.split(' ')[-1].split('/')[0].split('-')[0]
         standardized = get_language_from_json(language, plugin)
         if standardized is not None:
-            return standardized, get_lexer(standardized)
+            return standardized
 
     # standardize language against default languages
-    standardized = get_language_from_json(language, 'default')
-    return standardized, get_lexer(standardized)
+    return get_language_from_json(language, 'default')
 
 
 def get_lexer(language):

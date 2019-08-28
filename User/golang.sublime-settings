@@ -1,0 +1,5 @@
+{
+    "PATH": "C:\\Go\\",
+    // 这里改成你自己的GOPATH
+    "GOPATH": "c:\\Go\\"
+}

@@ -23,6 +23,7 @@
 		"FindKeyConflicts",
 		"GBK Support",
 		"Git",
+		"Golang Build",
 		"Jimbly's Clipboard History",
 		"MarkdownEditing",
 		"Package Control",
@@ -36,6 +37,7 @@
 		"Verilog",
 		"VHDL",
 		"VHDL Mode",
+		"View In Browser",
 		"Vintageous",
 		"WakaTime"
 	]
